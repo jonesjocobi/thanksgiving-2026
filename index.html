@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Thanksgiving 2026 | Familia Jones Jocobi</title>
+  <meta name="description" content="¡Celebremos juntos Thanksgiving! Invitación de la Familia Jones Jocobi: jueves 26 de noviembre de 2026 en San Diego, California. Consulta el menú y elige qué llevar.">
+  <meta name="theme-color" content="#7A2E2E">
+
+  <!-- Vista previa al compartir por WhatsApp, mensajes o correo -->
+  <meta property="og:title" content="🦃 Thanksgiving 2026 | Familia Jones Jocobi">
+  <meta property="og:description" content="Celebremos juntos en familia. Jueves 26 de noviembre de 2026 · San Diego, California. ¡Elige qué te gustaría traer!">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="es_MX">
+
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Nunito:wght@400;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ===================== PORTADA ===================== -->
+  <header class="hero" id="inicio">
+    <div class="lights" aria-hidden="true"></div>
+    <div class="leaves" aria-hidden="true"></div>
+
+    <img class="hero-deco deco-pumpkin-left" src="assets/pumpkin.svg" alt="" aria-hidden="true">
+    <img class="hero-deco deco-pumpkin-right" src="assets/pumpkin.svg" alt="" aria-hidden="true">
+    <img class="hero-deco deco-acorn" src="assets/acorn.svg" alt="" aria-hidden="true">
+
+    <div class="hero-content">
+      <button type="button" class="turkey-btn" id="turkey-btn" aria-label="Saludar al pavo del jardín">
+        <span class="speech" id="speech" aria-live="polite"></span>
+        <img class="hero-turkey" src="assets/turkey-car.svg" alt="Nuestro pavo inflable del jardín, con sombrero y lentes oscuros, manejando su carrito de elote">
+        <span class="exhaust" aria-hidden="true"><i></i><i></i><i></i></span>
+      </button>
+      <p class="hero-hosts">La Familia Jones Jocobi los invita</p>
+      <h1 class="hero-title" id="hero-title" aria-label="Thanksgiving 2026"><span class="word">Thanksgiving</span> <span class="word year">2026</span></h1>
+      <p class="hero-subtitle">Celebremos juntos en familia</p>
+      <p class="hero-quote">Con gratitud, amor y buena comida, los mejores momentos se comparten.</p>
+
+      <ul class="event-details">
+        <li>
+          <span class="detail-icon" aria-hidden="true">🗓️</span>
+          <span class="detail-label">Fecha</span>
+          <span class="detail-value">Jueves 26 de noviembre de 2026</span>
+        </li>
+        <li>
+          <span class="detail-icon" aria-hidden="true">🕒</span>
+          <span class="detail-label">Horario</span>
+          <span class="detail-value">Llegada: cuando gusten<br>Cena: 5:00 p.m. 🍽️</span>
+        </li>
+        <li>
+          <span class="detail-icon" aria-hidden="true">🏡</span>
+          <span class="detail-label">Lugar</span>
+          <span class="detail-value">Casa de la Familia Jones Jocobi<br>San Diego, California</span>
+        </li>
+        <li>
+          <span class="detail-icon" aria-hidden="true">📍</span>
+          <span class="detail-label">Dirección</span>
+          <span class="detail-value">12089 Rue Des Amis<br>San Diego, CA 92131</span>
+          <a class="map-link" href="https://www.google.com/maps/search/?api=1&amp;query=12089+Rue+Des+Amis,+San+Diego,+CA+92131" target="_blank" rel="noopener">Ver en el mapa ↗</a>
+        </li>
+      </ul>
+
+      <p class="countdown" id="countdown" aria-live="polite"></p>
+
+      <a class="btn btn-primary btn-hero" href="#menu">🍁 Ver menú y participar</a>
+    </div>
+
+    <a class="scroll-hint" href="#bienvenida" aria-label="Continuar hacia abajo">
+      <span></span>
+    </a>
+  </header>
+
+  <main>
+
+    <!-- ===================== BIENVENIDA ===================== -->
+    <section class="section welcome" id="bienvenida">
+      <div class="container">
+        <article class="letter reveal">
+          <img class="letter-leaf" src="assets/leaf.svg" alt="" aria-hidden="true">
+          <h2 class="letter-title">🍂 ¡Celebremos juntos Thanksgiving! 🦃</h2>
+          <p>Este año queremos reunirnos para compartir una tarde llena de alegría, deliciosa comida y momentos especiales.</p>
+          <p>La Familia Jones Jocobi está muy emocionada de recibirlos en casa para celebrar y agradecer por todas las bendiciones que hemos compartido.</p>
+          <p>Nosotros prepararemos el platillo principal y algunos de los acompañamientos. ¡Los invitamos a participar trayendo algo delicioso para compartir!</p>
+          <p>Lo más importante es disfrutar de estar juntos y crear recuerdos inolvidables.</p>
+          <p class="letter-closing">¡Los esperamos con mucho cariño!</p>
+          <p class="signature">Familia Jones Jocobi ❤️</p>
+          <p class="ps">P.D. ¡Nuestro pavo del jardín ya está listo para recibirlos! 😎🦃</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ===================== MENÚ ===================== -->
+    <section class="section menu" id="menu">
+      <div class="container">
+        <header class="section-header reveal">
+          <h2><span class="wiggle-emoji" aria-hidden="true">🍽️</span> Nuestro menú de Thanksgiving</h2>
+          <p>Estos son los platillos que ya están confirmados para la celebración.</p>
+        </header>
+
+        <div class="menu-group reveal">
+          <h3 class="group-title"><span>Platillos de la Familia Jones Jocobi</span></h3>
+          <div class="card-grid" id="menu-jones"></div>
+        </div>
+
+        <div class="menu-group reveal">
+          <h3 class="group-title"><span>Platillos de la Familia Lechuga</span></h3>
+          <div class="card-grid" id="menu-lechuga"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== CONTRIBUCIONES ===================== -->
+    <section class="section contribute" id="contribuir">
+      <div class="container">
+        <header class="section-header reveal">
+          <h2><span class="wiggle-emoji" aria-hidden="true">🧡</span> ¿Qué te gustaría traer?</h2>
+          <p>¡Una de las mejores tradiciones de Thanksgiving es compartir!</p>
+          <p>Si deseas contribuir con algún platillo, bebida o postre, selecciona una de las opciones disponibles.</p>
+          <p>Así podremos organizar nuestro menú y asegurarnos de tener un poquito de todo.</p>
+          <p>¿Tienes una receta especial? Elige <strong>“Quiero traer algo diferente”</strong> (opcional) y escribe lo que quieras compartir. ✨</p>
+        </header>
+
+        <div class="legend reveal" aria-label="Significado de los estados">
+          <span class="badge badge-disponible">Disponible</span> todavía se necesita
+          <span class="badge badge-confirmado">Confirmado</span> una familia ya lo lleva
+          <span class="badge badge-completo">Completo</span> ya tenemos lo suficiente
+        </div>
+
+        <div class="notice" id="demo-notice" hidden>
+          🔧 <strong>Modo de prueba:</strong> las selecciones se guardan solamente en este dispositivo.
+          Conecta Google Sheets para compartirlas con todos (ver README).
+        </div>
+        <div class="notice notice-error" id="load-error" hidden>
+          No pudimos cargar las contribuciones más recientes. Revisa tu conexión e
+          <button type="button" class="link-btn" id="retry-btn">inténtalo de nuevo</button>.
+        </div>
+
+        <div class="card-grid contributions-grid" id="contributions" aria-live="polite">
+          <p class="loading">Cargando opciones… 🍂</p>
+        </div>
+
+        <p class="quantity-note reveal">
+          * Las cantidades sugeridas son aproximadas y pueden cambiar según el número final de invitados.
+        </p>
+      </div>
+    </section>
+
+    <!-- ===================== RESUMEN ===================== -->
+    <section class="section summary" id="resumen">
+      <div class="container">
+        <header class="section-header reveal">
+          <h2><span class="wiggle-emoji" aria-hidden="true">📋</span> Contribuciones confirmadas</h2>
+          <p>Consulta en cualquier momento quién lleva qué.</p>
+        </header>
+        <div class="summary-card reveal">
+          <ul class="summary-list" id="summary-list"></ul>
+          <div class="summary-footer">
+            <span class="updated" id="updated-at"></span>
+            <button type="button" class="btn btn-ghost" id="refresh-btn">↻ Actualizar</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== AGRADECIMIENTO ===================== -->
+    <section class="section thanks" id="gracias">
+      <div class="container">
+        <article class="thanks-card reveal">
+          <div class="thanks-decor" aria-hidden="true">
+            <img src="assets/leaf.svg" alt=""><img src="assets/acorn.svg" alt=""><img src="assets/leaf.svg" alt="">
+          </div>
+          <h2>🍂 Agradecidos de compartir juntos</h2>
+          <p>Thanksgiving no se trata solamente del pavo, los acompañamientos o los postres.</p>
+          <p>Se trata de agradecer por la familia, los amigos, la salud, las oportunidades y todos esos pequeños momentos que hacen especial nuestra vida.</p>
+          <p>Gracias por formar parte de nuestra celebración y por ayudarnos a hacer de este día un recuerdo maravilloso.</p>
+          <p class="thanks-big">¡Nos vemos en Thanksgiving!</p>
+          <p class="signature">Con cariño, Familia Jones Jocobi 🧡</p>
+        </article>
+
+        <article class="postcard reveal" aria-labelledby="humberto-title">
+          <div class="postcard-inner">
+            <div class="stamp" aria-hidden="true"><span>✈️</span><small>2027</small></div>
+            <p class="postcard-eyebrow">Por correo aéreo 💌</p>
+            <h3 id="humberto-title">Para nuestro hermano Humberto</h3>
+            <p>Querido Humberto: este Thanksgiving te vamos a extrañar muchísimo. Tu lugar en la mesa no será el mismo sin ti, y en cada brindis estarás presente en nuestros corazones.</p>
+            <p>Pero tenemos una petición muy especial: <strong>¡por favor, ya haz tu trámite de visa!</strong> 🛂</p>
+            <p>Queremos que el próximo año estemos la familia completa, compartiendo el pavo, las risas y todo lo que tenemos que agradecer.</p>
+            <p class="postcard-ps">P.D. No te preocupes, te vamos a guardar tu platito de pavo con todo y relleno… ¡aunque te va a llegar <strong>recalentado</strong>! 😜🍗</p>
+            <p class="reserved"><span aria-hidden="true">🪑</span> Lugar reservado para <strong>Humberto</strong> en Thanksgiving 2027</p>
+            <p class="postcard-sign">Te queremos mucho y te esperamos con los brazos abiertos.<br><span>Tu familia 🧡</span></p>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>Thanksgiving 2026 · Familia Jones Jocobi · San Diego, California</p>
+    <a href="#inicio">↑ Volver al inicio</a>
+  </footer>
+
+  <!-- ===================== DIÁLOGO "YO LLEVO ESTO" ===================== -->
+  <dialog class="modal" id="claim-dialog" aria-labelledby="dialog-title">
+    <form method="dialog" id="claim-form">
+      <button type="button" class="modal-close" id="dialog-close" aria-label="Cerrar">×</button>
+      <div class="modal-icon" id="dialog-icon" aria-hidden="true">🥧</div>
+      <h3 id="dialog-title">¡Gracias por participar!</h3>
+      <p class="modal-item">Contribución: <strong id="dialog-item"></strong></p>
+      <p class="modal-suggestion" id="dialog-suggestion"></p>
+      <div class="field" id="dish-field" hidden>
+        <label for="claim-dish">¿Qué te gustaría traer?</label>
+        <input type="text" id="claim-dish" name="dish" maxlength="60"
+               placeholder="Ej. Ensalada, pastel de chocolate, hielo…">
+      </div>
+      <label for="claim-name">Tu nombre o el de tu familia</label>
+      <input type="text" id="claim-name" name="name" maxlength="60" required
+             autocomplete="name" placeholder="Ej. Familia García">
+      <p class="modal-error" id="dialog-error" role="alert"></p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" id="dialog-cancel">Cancelar</button>
+        <button type="submit" class="btn btn-primary" id="dialog-submit">Confirmar 🧡</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Confirmación -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>

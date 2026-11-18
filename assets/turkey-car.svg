@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 280" role="img" aria-label="Nuestro pavo inflable del jardín manejando su carrito de elote">
+  <style>
+    .wing { transform-origin: 118px 138px; animation: wave 1.1s ease-in-out infinite alternate; }
+    .head { transform-origin: 136px 125px; animation: nod 2.2s ease-in-out infinite; }
+    .wattle { transform-origin: 153px 98px; animation: wiggle 0.9s ease-in-out infinite alternate; }
+    .rider { animation: bounce 0.5s ease-in-out infinite alternate; }
+    .car { animation: bounce 0.5s ease-in-out .12s infinite alternate; }
+    .wheel-r { transform-origin: 88px 240px; animation: spin 1s linear infinite; }
+    .wheel-f { transform-origin: 252px 240px; animation: spin 1s linear infinite; }
+    .tail { transform-origin: 118px 170px; animation: fan 2.6s ease-in-out infinite; }
+    @keyframes wave { from { transform: rotate(-14deg); } to { transform: rotate(16deg); } }
+    @keyframes nod { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(4deg); } }
+    @keyframes wiggle { from { transform: rotate(-8deg); } to { transform: rotate(10deg); } }
+    @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-3px); } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes fan { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-5deg); } }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+  <defs>
+    <linearGradient id="corn" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFFBA0"/>
+      <stop offset=".5" stop-color="#FBEA3C"/>
+      <stop offset="1" stop-color="#E9C21E"/>
+    </linearGradient>
+    <radialGradient id="head" cx=".4" cy=".35" r=".7">
+      <stop offset="0" stop-color="#F2B47A"/>
+      <stop offset="1" stop-color="#B8723F"/>
+    </radialGradient>
+    <linearGradient id="overall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5CC8F2"/>
+      <stop offset="1" stop-color="#1E8FD0"/>
+    </linearGradient>
+    <clipPath id="carClip">
+      <path d="M40 178 Q36 238 90 238 L245 238 Q305 230 308 196 Q305 162 245 160 L95 162 Q42 162 40 178 Z"/>
+    </clipPath>
+  </defs>
+
+  <!-- sombra -->
+  <ellipse cx="170" cy="268" rx="135" ry="9" fill="#000" opacity=".22"/>
+
+  <!-- plumas de la cola -->
+<g class="tail">
+  <g stroke="#00000022" stroke-width="2">
+    <g transform="rotate(-82 118 170)"><ellipse cx="118" cy="108" rx="18" ry="56" fill="#F57C1F"/></g>
+    <g transform="rotate(-56 118 170)"><ellipse cx="118" cy="104" rx="18" ry="58" fill="#E5283E"/></g>
+    <g transform="rotate(-30 118 170)"><ellipse cx="118" cy="102" rx="18" ry="60" fill="#FFD23F"/></g>
+    <g transform="rotate(-4 118 170)"><ellipse cx="118" cy="104" rx="17" ry="56" fill="#5BBF4A"/></g>
+  </g>
+</g>
+
+<g class="rider">
+  <!-- brazo saludando -->
+<g class="wing">
+  <path d="M112 142 Q92 118 76 76 Q72 60 86 62 Q100 74 126 134 Z" fill="#A65A2E" stroke="#7A3F1E" stroke-width="2"/>
+  <path d="M80 70 q-6 -8 2 -12 M86 64 q0 -10 8 -8" stroke="#7A3F1E" stroke-width="3" fill="none" stroke-linecap="round"/>
+
+</g>
+  <!-- cuerpo: overol azul y chaleco café -->
+  <rect x="104" y="128" width="64" height="56" rx="16" fill="url(#overall)" stroke="#167AB5" stroke-width="2"/>
+  <path d="M104 146 Q104 128 120 128 L150 128 Q168 128 168 146 L160 150 L150 134 L122 134 L112 150 Z" fill="#8B4A26"/>
+  <circle cx="122" cy="150" r="3" fill="#F6C343"/><circle cx="150" cy="150" r="3" fill="#F6C343"/>
+
+  <!-- cuello -->
+  <rect x="122" y="116" width="28" height="16" rx="6" fill="#D88C4D"/>
+  <path d="M124 122 h24 M124 127 h24" stroke="#B9703A" stroke-width="1.5"/>
+
+<g class="head">
+  <!-- cabeza -->
+  <ellipse cx="136" cy="92" rx="32" ry="33" fill="url(#head)" stroke="#C97C3E" stroke-width="2"/>
+
+  <!-- lentes oscuros -->
+  <rect x="110" y="76" width="23" height="14" rx="6" fill="#1B1B22"/>
+  <rect x="139" y="76" width="23" height="14" rx="6" fill="#1B1B22"/>
+  <path d="M133 81 h6" stroke="#1B1B22" stroke-width="3"/>
+  <path d="M114 89 l8 -12 M120 89 l8 -12 M126 89 l6 -9 M143 89 l8 -12 M149 89 l8 -12 M155 89 l6 -9" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>
+
+  <!-- pico sonriente y moco rojo -->
+  <path d="M114 96 Q136 88 158 96 Q153 124 136 126 Q119 124 114 96 Z" fill="#F7C531" stroke="#D99A12" stroke-width="2"/>
+  <path d="M120 100 Q136 95 152 100 Q148 119 136 120 Q124 119 120 100 Z" fill="#EE4F86"/>
+  <path d="M126 108 Q136 105 146 108 Q143 116 136 117 Q129 116 126 108 Z" fill="#C2275E"/>
+  <path class="wattle" d="M152 96 Q164 104 160 124 Q154 120 152 108 Z" fill="#C8243A"/>
+
+  <!-- sombrero de peregrino -->
+  <path d="M114 62 L110 26 Q136 18 162 26 L158 62 Z" fill="#232838" stroke="#151823" stroke-width="2"/>
+  <rect x="112" y="48" width="48" height="10" fill="#D7263D"/>
+  <rect x="129" y="45" width="14" height="16" rx="2" fill="#F6C343"/>
+  <rect x="133" y="49" width="6" height="8" fill="#232838"/>
+  <ellipse cx="136" cy="62" rx="46" ry="9" fill="#232838" stroke="#151823" stroke-width="2"/>
+
+</g>
+  <!-- volante -->
+  <path d="M166 152 Q178 150 186 144" stroke="#A65A2E" stroke-width="12" stroke-linecap="round" fill="none"/>
+  <ellipse cx="194" cy="146" rx="13" ry="19" fill="none" stroke="#2A2A30" stroke-width="7" transform="rotate(-20 194 146)"/>
+
+</g>
+<g class="car">
+  <!-- carrito de elote -->
+  <path d="M40 178 Q36 238 90 238 L245 238 Q305 230 308 196 Q305 162 245 160 L95 162 Q42 162 40 178 Z" fill="url(#corn)" stroke="#D9B21A" stroke-width="2.5"/>
+  <g clip-path="url(#carClip)">
+    <path d="M30 150 Q95 150 112 200 Q110 236 70 250 L30 250 Z" fill="#3FAE49"/>
+    <path d="M30 168 Q80 170 92 210 Q88 236 60 250 L30 250 Z" fill="#2E8F3C"/>
+    <path d="M44 172 Q70 175 80 200" stroke="#7FD36B" stroke-width="4" fill="none" stroke-linecap="round" opacity=".7"/>
+  </g>
+  <g clip-path="url(#carClip)" stroke="#E07A1F" stroke-width="2.5" fill="none" stroke-linecap="round">
+    <path d="M150 150 L180 250 M185 150 L215 250 M215 150 L245 250 M245 150 L275 250 M275 150 L305 250"/>
+    <path d="M130 182 Q245 168 312 186 M120 206 Q245 194 312 208 M115 230 Q245 220 312 232"/>
+  </g>
+  <path d="M120 172 Q170 166 230 168" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity=".55" fill="none"/>
+
+</g>
+  <!-- ruedas de calabaza -->
+  <g class="wheel-r">
+    <ellipse cx="88" cy="240" rx="27" ry="25" fill="#E9662A" stroke="#B9461A" stroke-width="2"/>
+    <path d="M88 216 Q74 240 88 264 M88 216 Q102 240 88 264 M64 240 Q88 228 112 240" stroke="#C4501E" stroke-width="2" fill="none"/>
+    <path d="M88 232 l3 5 6 1 -4 4 1 6 -6 -3 -6 3 1 -6 -4 -4 6 -1z" fill="#2E7D4F"/>
+  </g>
+  <g class="wheel-f">
+    <ellipse cx="252" cy="240" rx="29" ry="27" fill="#E9662A" stroke="#B9461A" stroke-width="2"/>
+    <path d="M252 214 Q237 240 252 266 M252 214 Q267 240 252 266 M226 240 Q252 228 278 240" stroke="#C4501E" stroke-width="2" fill="none"/>
+    <path d="M252 231 l3 5 6 1 -4 4 1 6 -6 -3 -6 3 1 -6 -4 -4 6 -1z" fill="#2E7D4F"/>
+  </g>
+</svg>

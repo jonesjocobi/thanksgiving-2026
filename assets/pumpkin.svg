@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 160" role="img" aria-label="Calabaza decorativa">
+  <path d="M100 38 q-4 -20 10 -30" stroke="#5B4A1E" stroke-width="9" fill="none" stroke-linecap="round"/>
+  <path d="M106 26 q26 -16 40 4 q-22 6 -40 -4z" fill="#6E7B3A"/>
+  <ellipse cx="62" cy="96" rx="44" ry="56" fill="#C4561F"/>
+  <ellipse cx="138" cy="96" rx="44" ry="56" fill="#C4561F"/>
+  <ellipse cx="80" cy="96" rx="34" ry="60" fill="#DD6E2A"/>
+  <ellipse cx="120" cy="96" rx="34" ry="60" fill="#DD6E2A"/>
+  <ellipse cx="100" cy="96" rx="26" ry="62" fill="#EB8436"/>
+  <ellipse cx="94" cy="66" rx="7" ry="18" fill="#F6A55B" opacity=".6"/>
+</svg>

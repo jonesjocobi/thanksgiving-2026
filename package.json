@@ -1,0 +1,9 @@
+{
+  "name": "thanksgiving-2026",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Invitación interactiva de Thanksgiving 2026 · Familia Jones Jocobi",
+  "dependencies": {
+    "mongodb": "^6.10.0"
+  }
+}
