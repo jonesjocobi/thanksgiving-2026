@@ -78,6 +78,7 @@ let currentItem = null;
 let lastUpdated = null;
 let guest = null;   // invitado identificado en este dispositivo
 let me = null;      // { guest, rsvp, entryIds } según el servidor
+let swapFrom = null; // contribución que el invitado está cambiando
 
 /* ---------- Utilidades ---------- */
 const $ = (sel) => document.querySelector(sel);
@@ -262,7 +263,9 @@ function renderContributions(highlightId) {
 
     const btn = s.full
       ? el('button', { class: 'btn btn-done', type: 'button', disabled: true }, iAmIn ? '🧡 ¡Tú llevas esto!' : '✓ ¡Ya está cubierto!')
-      : el('button', { class: 'btn btn-primary', type: 'button', onclick: () => openDialog(item) }, 'Yo llevo esto');
+      : swapFrom && swapFrom.itemId === item.id
+        ? el('button', { class: 'btn btn-done', type: 'button', disabled: true }, 'Tu contribución actual')
+        : el('button', { class: 'btn btn-primary', type: 'button', onclick: () => openDialog(item) }, swapFrom ? '🔄 Cambiar a esto' : 'Yo llevo esto');
 
     return el('article', {
       class: `card contrib-card${s.full ? ' is-full' : ''}${highlightId === item.id ? ' just-claimed' : ''}`,
@@ -298,7 +301,7 @@ function renderContributions(highlightId) {
     el('div', { class: 'card-icon', 'aria-hidden': 'true' }, '✨'),
     el('h4', { class: 'card-name' }, 'Quiero traer algo diferente', el('small', {}, '(opcional)')),
     el('p', { class: 'add-text' }, 'Un platillo especial, una botana, un postre de la familia… ¡Todo se agradece!'),
-    el('button', { class: 'btn btn-primary', type: 'button', onclick: () => openDialog(CUSTOM_ITEM) }, '➕ Agregar'),
+    el('button', { class: 'btn btn-primary', type: 'button', onclick: () => openDialog(CUSTOM_ITEM) }, swapFrom ? '🔄 Cambiar a algo diferente' : '➕ Agregar'),
   ));
 
   const grid = $('#contributions');
@@ -309,7 +312,41 @@ function renderContributions(highlightId) {
 /* Nombre de quien lo lleva; si es tuyo, con botón para cancelar */
 function claimerItem(entry, mine) {
   if (!mine.has(entry.id)) return el('li', {}, entry.name);
-  return el('li', { class: 'mine' }, entry.name + ' (tú) ', cancelButton(entry));
+  return el('li', { class: 'mine' }, entry.name + ' (tú) ', changeButton(entry), cancelButton(entry));
+}
+
+const entryLabel = (e) => e.dish || (CONTRIBUTIONS.find((c) => c.id === e.itemId) || {}).name || e.itemId;
+
+function changeButton(entry) {
+  return el('button', {
+    type: 'button',
+    class: 'change-btn',
+    'aria-label': 'Cambiar esta contribución por otra',
+    onclick: () => startSwap(entry),
+  }, 'Cambiar');
+}
+
+function startSwap(entry) {
+  swapFrom = entry;
+  renderSwapBanner();
+  renderContributions();
+  $('#contribuir').scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth' });
+}
+
+function endSwap() {
+  swapFrom = null;
+  renderSwapBanner();
+  renderContributions();
+}
+
+function renderSwapBanner() {
+  const banner = $('#swap-banner');
+  if (!swapFrom) { banner.hidden = true; return; }
+  banner.hidden = false;
+  banner.replaceChildren(
+    el('span', {}, '🔄 Elige qué quieres traer en lugar de ', el('strong', {}, entryLabel(swapFrom))),
+    el('button', { type: 'button', class: 'btn btn-ghost', onclick: endSwap }, 'No cambiar'),
+  );
 }
 
 function cancelButton(entry) {
@@ -406,12 +443,14 @@ const dialog = $('#claim-dialog');
 function openDialog(item) {
   currentItem = item;
   $('#dialog-icon').textContent = item.icon;
-  $('#dialog-title').textContent = item.custom ? 'Quiero traer algo diferente' : '¡Gracias por participar!';
+  $('#dialog-title').textContent = swapFrom
+    ? 'Cambiar mi contribución'
+    : item.custom ? 'Quiero traer algo diferente' : '¡Gracias por participar!';
   $('#dialog-item').parentElement.hidden = Boolean(item.custom);
   $('#dialog-item').textContent = item.name + (item.en ? ` (${item.en})` : '');
-  $('#dialog-suggestion').textContent = item.custom
+  $('#dialog-suggestion').textContent = (swapFrom ? `Antes: ${entryLabel(swapFrom)}. ` : '') + (item.custom
     ? 'Cuéntanos qué te gustaría compartir con todos.'
-    : `Cantidad sugerida: ${item.suggestion}`;
+    : `Cantidad sugerida: ${item.suggestion}`);
   $('#dish-field').hidden = !item.custom;
   $('#claim-dish').required = Boolean(item.custom);
   $('#claim-dish').value = '';
@@ -433,7 +472,7 @@ function closeDialog() {
 function setSubmitting(on) {
   const b = $('#dialog-submit');
   b.disabled = on;
-  b.textContent = on ? 'Guardando…' : 'Confirmar 🧡';
+  b.textContent = on ? 'Guardando…' : swapFrom ? 'Cambiar 🔄' : 'Confirmar 🧡';
 }
 
 $('#dialog-cancel').addEventListener('click', closeDialog);
@@ -482,10 +521,22 @@ $('#claim-form').addEventListener('submit', async (e) => {
         me.entryIds.push(result.entryId);
       }
       closeDialog();
+      let swapped = null;
+      if (swapFrom && result.key) {
+        const old = swapFrom;
+        try {
+          const res2 = await apiPost({ action: 'cancel', entryId: old.id, key: guest.key });
+          applyState(res2);
+          if (res2.ok) { me.entryIds = me.entryIds.filter((id) => id !== old.id); swapped = old; }
+        } catch (err) { console.error(err); }
+      }
+      swapFrom = null;
+      renderSwapBanner();
       const key = item.custom ? CUSTOM_ID + ':' + dish : item.id;
       renderAll(key);
       const what = item.custom ? `${dish} ${dishIcon(dish)}` : `${item.name} ${item.icon}`;
-      showToast(result.needsLink
+      if (swapped) showToast(`¡Listo! Cambiaste ${entryLabel(swapped)} por ${what} 🔄`);
+      else showToast(result.needsLink
         ? `¡Gracias, ${name}! Quedó registrado: ${what}. Te enviamos un correo con tu enlace para hacer cambios.`
         : `¡Gracias, ${name}! Quedó registrado: ${what}. Te enviamos la confirmación por correo 💌`);
       celebrate([...document.querySelectorAll('.contrib-card')].find((c) => c.dataset.id === key));
@@ -546,7 +597,7 @@ function renderRsvp() {
     el('div', { class: 'me-contribs' },
       el('p', { class: 'me-label' }, 'Lo que vas a traer'),
       mineList.length
-        ? el('ul', {}, mineList.map((e) => el('li', {}, el('span', { 'aria-hidden': 'true' }, itemIcon(e) + ' '), itemName(e) + ' ', cancelButton(e))))
+        ? el('ul', {}, mineList.map((e) => el('li', {}, el('span', { 'aria-hidden': 'true' }, itemIcon(e) + ' '), itemName(e) + ' ', changeButton(e), cancelButton(e))))
         : el('p', { class: 'me-empty' }, 'Nada todavía. ', el('a', { href: '#contribuir' }, 'Elige algo para compartir 🥧')),
     ),
     el('p', { class: 'me-note' }, `Te enviamos tus confirmaciones a ${me.guest.email}.`),
