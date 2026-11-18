@@ -69,12 +69,15 @@ const DISH_ICONS = [
 const dishIcon = (text) => (DISH_ICONS.find(([re]) => re.test(text)) || [null, '🍽️'])[1];
 const normalize = (t) => t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
 
-const LOCAL_KEY = 'tg26-entries';  // modo de prueba
-const MINE_KEY = 'tg26-mine';      // lo que este dispositivo registró
+const LOCAL_KEY = 'tg26-db';      // modo de prueba (sin servicio)
+const GUEST_KEY = 'tg26-guest';   // { key, name, email } de este invitado
 
 let entries = [];
+let rsvpTotals = null;
 let currentItem = null;
 let lastUpdated = null;
+let guest = null;   // invitado identificado en este dispositivo
+let me = null;      // { guest, rsvp, entryIds } según el servidor
 
 /* ---------- Utilidades ---------- */
 const $ = (sel) => document.querySelector(sel);
@@ -102,35 +105,112 @@ function storageSet(key, value) {
 }
 
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const cleanText = (v) => String(v || '').replace(/\s+/g, ' ').trim();
+const validEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(v || '').trim());
+const myEntryIds = () => new Set(me ? me.entryIds : []);
 
 /* ---------- Comunicación con el servicio ---------- */
 async function apiList() {
-  if (!CONFIG.API_URL) return storageGet(LOCAL_KEY, []);
+  if (!CONFIG.API_URL) return localServer({ action: 'list' });
   const res = await fetch(CONFIG.API_URL + (CONFIG.API_URL.includes('?') ? '&' : '?') + 't=' + Date.now(), { cache: 'no-store' });
   if (!res.ok) throw new Error('HTTP ' + res.status);
   const data = await res.json();
   if (!data.ok) throw new Error(data.error || 'error');
-  return data.entries || [];
+  return data;
 }
 
-async function apiAdd(itemId, name, dish) {
-  if (!CONFIG.API_URL) {
-    const list = storageGet(LOCAL_KEY, []);
-    const item = CONTRIBUTIONS.find((c) => c.id === itemId);
-    if (item && list.filter((e) => e.itemId === itemId).length >= item.slots) {
-      return { ok: false, error: 'full', entries: list };
-    }
-    list.push(itemId === CUSTOM_ID ? { itemId, name, dish, ts: new Date().toISOString() } : { itemId, name, ts: new Date().toISOString() });
-    storageSet(LOCAL_KEY, list);
-    return { ok: true, entries: list };
-  }
+async function apiPost(payload) {
+  if (!CONFIG.API_URL) return localServer(payload);
   // text/plain evita la verificación CORS previa (necesario para Google Apps Script)
   const res = await fetch(CONFIG.API_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({ action: 'add', itemId, name, dish }),
+    body: JSON.stringify(payload),
   });
   return res.json();
+}
+
+function applyState(data) {
+  if (data && data.entries) {
+    entries = data.entries;
+    rsvpTotals = data.rsvp || null;
+    lastUpdated = new Date();
+  }
+}
+
+/* Modo de prueba: imita al servidor guardando todo en este dispositivo (no envía correos) */
+function localServer(p) {
+  const db = storageGet(LOCAL_KEY, { entries: [], guests: [], rsvps: [] });
+  const save = () => storageSet(LOCAL_KEY, db);
+  const pub = () => {
+    const yes = db.rsvps.filter((r) => r.attending === 'si');
+    return {
+      ok: true,
+      entries: db.entries.map(({ email, ...rest }) => rest),
+      rsvp: { families: yes.length, adults: yes.reduce((a, r) => a + r.adults, 0), kids: yes.reduce((a, r) => a + r.kids, 0) },
+    };
+  };
+  const identify = (email, name, key) => {
+    const g = db.guests.find((x) => x.email === email);
+    if (!g) { const k = crypto.getRandomValues(new Uint32Array(4)).join(''); db.guests.push({ email, name, key: k }); return k; }
+    return key === g.key ? g.key : null;
+  };
+  const byKey = (key) => db.guests.find((x) => x.key === key);
+  const email = String(p.email || '').trim().toLowerCase();
+
+  if (p.action === 'list') return pub();
+  if (p.action === 'add') {
+    const item = CONTRIBUTIONS.find((c) => c.id === p.itemId);
+    if (item && db.entries.filter((e) => e.itemId === p.itemId).length >= item.slots) return { ...pub(), ok: false, error: 'full' };
+    const key = identify(email, p.name, p.key);
+    const id = Math.random().toString(36).slice(2, 10);
+    db.entries.push({ id, itemId: p.itemId, name: p.name, email, ...(p.dish ? { dish: p.dish } : {}), ts: new Date().toISOString() });
+    save();
+    return { ...pub(), ok: true, entryId: id, key, needsLink: !key };
+  }
+  if (p.action === 'rsvp') {
+    const existing = db.rsvps.find((r) => r.email === email);
+    const key = identify(email, p.name, p.key);
+    if (existing && !key) { save(); return { ok: false, error: 'needs_link' }; }
+    const row = { email, name: p.name, attending: p.attending, adults: p.attending === 'si' ? +p.adults : 0, kids: p.attending === 'si' ? +p.kids : 0, message: p.message };
+    if (existing) Object.assign(existing, row); else db.rsvps.push(row);
+    save();
+    return { ...pub(), ok: true, key, needsLink: !key };
+  }
+  if (p.action === 'cancel') {
+    const g = byKey(p.key);
+    const i = db.entries.findIndex((e) => e.id === p.entryId && g && e.email === g.email);
+    if (i < 0) return { ...pub(), ok: false, error: 'not_found' };
+    db.entries.splice(i, 1); save();
+    return { ...pub(), ok: true };
+  }
+  if (p.action === 'me') {
+    const g = byKey(p.key);
+    if (!g) return { ok: false, error: 'not_allowed' };
+    const r = db.rsvps.find((x) => x.email === g.email);
+    return { ok: true, guest: { name: g.name, email: g.email }, rsvp: r || null, entryIds: db.entries.filter((e) => e.email === g.email).map((e) => e.id) };
+  }
+  if (p.action === 'sendLink') return { ok: true };
+  return { ok: false, error: 'bad_action' };
+}
+
+/* ---------- Identidad del invitado ---------- */
+function rememberGuest(data) {
+  guest = { ...(guest || {}), ...data };
+  storageSet(GUEST_KEY, guest);
+}
+
+async function loadMe() {
+  if (!guest || !guest.key) { me = null; return; }
+  try {
+    const res = await apiPost({ action: 'me', key: guest.key });
+    if (res.ok) {
+      me = res;
+      rememberGuest({ name: res.guest.name, email: res.guest.email });
+    } else if (res.error === 'not_allowed') {
+      me = null; guest = null; storageSet(GUEST_KEY, null);
+    }
+  } catch (err) { console.error(err); }
 }
 
 /* ---------- Estado de cada contribución ---------- */
@@ -161,11 +241,11 @@ function renderMenu() {
 
 /* ---------- Render: contribuciones ---------- */
 function renderContributions(highlightId) {
-  const mine = storageGet(MINE_KEY, []);
+  const mine = myEntryIds();
   const cards = CONTRIBUTIONS.map((item) => {
     const s = statusOf(item);
     const multi = item.slots > 1;
-    const iAmIn = s.claimers.some((c) => mine.some((m) => m.itemId === item.id && m.name === c.name));
+    const iAmIn = s.claimers.some((c) => mine.has(c.id));
 
     const btn = s.full
       ? el('button', { class: 'btn btn-done', type: 'button', disabled: true }, iAmIn ? '🧡 ¡Tú llevas esto!' : '✓ ¡Ya está cubierto!')
@@ -181,9 +261,7 @@ function renderContributions(highlightId) {
       el('p', { class: 'suggestion' }, `Sugerido: ${item.suggestion}*`),
       el('span', { class: `badge badge-${s.state}` }, STATE_LABEL[s.state]),
       s.count ? el('ul', { class: 'claimers', 'aria-label': 'Lo llevan' },
-        s.claimers.map((c) => el('li', {
-          class: mine.some((m) => m.itemId === item.id && m.name === c.name) ? 'mine' : '',
-        }, c.name))) : null,
+        s.claimers.map((c) => claimerItem(c, mine))) : null,
       multi ? el('div', { class: 'progress', role: 'progressbar', 'aria-valuemin': '0', 'aria-valuemax': String(item.slots), 'aria-valuenow': String(s.count), 'aria-label': 'Familias registradas' },
         el('span', { style: `width:${Math.min(100, (s.count / item.slots) * 100)}%` })) : null,
       multi ? el('p', { class: 'progress-label' }, `${s.count} de ${item.slots} familias`) : null,
@@ -192,13 +270,12 @@ function renderContributions(highlightId) {
   });
   // Lo que los invitados agregaron por su cuenta
   entries.filter((e) => e.itemId === CUSTOM_ID).forEach((e) => {
-    const isMine = mine.some((m) => m.itemId === CUSTOM_ID && m.name === e.name && m.dish === e.dish);
     cards.push(el('article', { class: `card contrib-card custom-card${highlightId === CUSTOM_ID + ':' + e.dish ? ' just-claimed' : ''}`, 'data-id': CUSTOM_ID + ':' + e.dish },
       el('span', { class: 'chip' }, 'Idea de invitado'),
       el('div', { class: 'card-icon', 'aria-hidden': 'true' }, dishIcon(e.dish)),
       el('h4', { class: 'card-name' }, e.dish),
       el('span', { class: 'badge badge-confirmado' }, 'Confirmado'),
-      el('ul', { class: 'claimers', 'aria-label': 'Lo lleva' }, el('li', { class: isMine ? 'mine' : '' }, e.name)),
+      el('ul', { class: 'claimers', 'aria-label': 'Lo lleva' }, claimerItem(e, mine)),
     ));
   });
 
@@ -214,6 +291,49 @@ function renderContributions(highlightId) {
   const grid = $('#contributions');
   grid.replaceChildren(...cards);
   if (window.__observeGrid) window.__observeGrid(grid);
+}
+
+/* Nombre de quien lo lleva; si es tuyo, con botón para cancelar */
+function claimerItem(entry, mine) {
+  if (!mine.has(entry.id)) return el('li', {}, entry.name);
+  return el('li', { class: 'mine' }, entry.name + ' (tú) ', cancelButton(entry));
+}
+
+function cancelButton(entry) {
+  let armed = false;
+  let timer;
+  const btn = el('button', {
+    type: 'button',
+    class: 'cancel-btn',
+    'aria-label': 'Cancelar esta contribución',
+    onclick: async () => {
+      if (!armed) {
+        armed = true;
+        btn.textContent = '¿Seguro? Toca otra vez';
+        btn.classList.add('armed');
+        timer = setTimeout(() => { armed = false; btn.textContent = 'Cancelar'; btn.classList.remove('armed'); }, 4000);
+        return;
+      }
+      clearTimeout(timer);
+      btn.disabled = true;
+      btn.textContent = 'Cancelando…';
+      try {
+        const res = await apiPost({ action: 'cancel', entryId: entry.id, key: guest && guest.key });
+        applyState(res);
+        if (res.ok) {
+          if (me) me.entryIds = me.entryIds.filter((id) => id !== entry.id);
+          showToast('Listo, cancelamos esa contribución. ¡Puedes elegir otra cuando quieras! 🍂');
+        } else {
+          showToast('No pudimos cancelarla. Actualiza la página e inténtalo de nuevo.', true);
+        }
+      } catch (err) {
+        console.error(err);
+        showToast('No hay conexión. Inténtalo de nuevo.', true);
+      }
+      renderAll();
+    },
+  }, 'Cancelar');
+  return btn;
 }
 
 /* ---------- Render: resumen ---------- */
@@ -249,13 +369,13 @@ function renderSummary() {
 function renderAll(highlightId) {
   renderContributions(highlightId);
   renderSummary();
+  renderRsvp();
 }
 
 /* ---------- Cargar datos ---------- */
 async function refresh({ quiet = false } = {}) {
   try {
-    entries = await apiList();
-    lastUpdated = new Date();
+    applyState(await apiList());
     $('#load-error').hidden = true;
     renderAll();
   } catch (err) {
@@ -284,7 +404,8 @@ function openDialog(item) {
   $('#claim-dish').value = '';
   $('#dialog-error').textContent = '';
   const input = $('#claim-name');
-  input.value = storageGet('tg26-lastname', '');
+  input.value = (guest && guest.name) || '';
+  $('#claim-email').value = (guest && guest.email) || '';
   setSubmitting(false);
   if (typeof dialog.showModal === 'function') dialog.showModal();
   else dialog.setAttribute('open', '');
@@ -314,6 +435,12 @@ $('#claim-form').addEventListener('submit', async (e) => {
     $('#claim-name').focus();
     return;
   }
+  const email = $('#claim-email').value.trim();
+  if (!validEmail(email)) {
+    $('#dialog-error').textContent = 'Escribe un correo válido. Ahí te llegará tu confirmación.';
+    $('#claim-email').focus();
+    return;
+  }
   const item = currentItem;
   let dish;
   if (item.custom) {
@@ -332,21 +459,22 @@ $('#claim-form').addEventListener('submit', async (e) => {
   }
   setSubmitting(true);
   try {
-    const result = await apiAdd(item.id, name, dish);
-    if (result.entries) entries = result.entries;
-    lastUpdated = new Date();
+    const result = await apiPost({ action: 'add', itemId: item.id, name, email, dish, key: guest && guest.key });
+    applyState(result);
 
     if (result.ok) {
-      const mine = storageGet(MINE_KEY, []);
-      mine.push(item.custom ? { itemId: item.id, name, dish } : { itemId: item.id, name });
-      storageSet(MINE_KEY, mine);
-      storageSet('tg26-lastname', name);
+      if (result.key) {
+        rememberGuest({ key: result.key, name, email });
+        if (!me) me = { guest: { name, email }, rsvp: null, entryIds: [] };
+        me.entryIds.push(result.entryId);
+      }
       closeDialog();
       const key = item.custom ? CUSTOM_ID + ':' + dish : item.id;
       renderAll(key);
-      showToast(item.custom
-        ? `¡Gracias, ${name}! Quedó registrado: ${dish} ${dishIcon(dish)}`
-        : `¡Gracias, ${name}! Quedó registrado: ${item.name} ${item.icon}`);
+      const what = item.custom ? `${dish} ${dishIcon(dish)}` : `${item.name} ${item.icon}`;
+      showToast(result.needsLink
+        ? `¡Gracias, ${name}! Quedó registrado: ${what}. Te enviamos un correo con tu enlace para hacer cambios.`
+        : `¡Gracias, ${name}! Quedó registrado: ${what}. Te enviamos la confirmación por correo 💌`);
       celebrate([...document.querySelectorAll('.contrib-card')].find((c) => c.dataset.id === key));
     } else if (result.error === 'full') {
       closeDialog();
@@ -362,6 +490,170 @@ $('#claim-form').addEventListener('submit', async (e) => {
     setSubmitting(false);
   }
 });
+
+
+/* ---------- Confirmación de asistencia (RSVP) ---------- */
+let editingRsvp = false;
+
+function renderRsvp() {
+  // Contador público
+  const count = $('#rsvp-count');
+  if (rsvpTotals && rsvpTotals.families > 0) {
+    const people = rsvpTotals.adults + rsvpTotals.kids;
+    count.textContent = `👨‍👩‍👧‍👦 Ya confirmaron ${rsvpTotals.families} ${rsvpTotals.families === 1 ? 'familia' : 'familias'} · ${people} ${people === 1 ? 'persona' : 'personas'}`;
+    count.hidden = false;
+  } else {
+    count.hidden = true;
+  }
+
+  const panel = $('#rsvp-me');
+  const form = $('#rsvp-form');
+  const hasRsvp = Boolean(me && me.rsvp);
+  form.hidden = hasRsvp && !editingRsvp;
+  $('#lost-wrap').hidden = Boolean(me);
+  $('#rsvp-submit').textContent = hasRsvp ? 'Guardar cambios' : 'Enviar confirmación 💌';
+  $('#rsvp-cancel-edit').hidden = !(hasRsvp && editingRsvp);
+
+  if (!me) { panel.hidden = true; return; }
+  panel.hidden = false;
+  const r = me.rsvp;
+  const mineList = entries.filter((e) => me.entryIds.includes(e.id));
+  const itemName = (e) => e.dish || (CONTRIBUTIONS.find((c) => c.id === e.itemId) || {}).name || e.itemId;
+  const itemIcon = (e) => e.dish ? dishIcon(e.dish) : (CONTRIBUTIONS.find((c) => c.id === e.itemId) || {}).icon || '🍽️';
+
+  panel.replaceChildren(
+    el('p', { class: 'me-hello' }, `¡Hola, ${me.guest.name}! 👋`),
+    r
+      ? el('p', { class: 'me-status ' + (r.attending === 'si' ? 'yes' : 'no') },
+          r.attending === 'si'
+            ? `✅ Asistirás · ${r.adults} ${r.adults === 1 ? 'adulto' : 'adultos'}${r.kids ? ` y ${r.kids} ${r.kids === 1 ? 'niño' : 'niños'}` : ''}`
+            : '😢 No podrás asistir. ¡Te vamos a extrañar!')
+      : el('p', { class: 'me-status pending' }, 'Todavía no confirmas tu asistencia. Llena el formulario de abajo 👇'),
+    r && !editingRsvp ? el('button', { type: 'button', class: 'btn btn-ghost', onclick: () => { editingRsvp = true; fillRsvpForm(); renderRsvp(); $('#rsvp-form').scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'center' }); } }, '✏️ Cambiar mi respuesta') : null,
+    el('div', { class: 'me-contribs' },
+      el('p', { class: 'me-label' }, 'Lo que vas a traer'),
+      mineList.length
+        ? el('ul', {}, mineList.map((e) => el('li', {}, el('span', { 'aria-hidden': 'true' }, itemIcon(e) + ' '), itemName(e) + ' ', cancelButton(e))))
+        : el('p', { class: 'me-empty' }, 'Nada todavía. ', el('a', { href: '#contribuir' }, 'Elige algo para compartir 🥧')),
+    ),
+    el('p', { class: 'me-note' }, `Te enviamos tus confirmaciones a ${me.guest.email}.`),
+  );
+}
+
+function fillRsvpForm() {
+  const r = me && me.rsvp;
+  $('#rsvp-name').value = (r && r.name) || (guest && guest.name) || '';
+  $('#rsvp-email').value = (guest && guest.email) || '';
+  const attending = r ? r.attending : 'si';
+  $('#rsvp-yes').checked = attending === 'si';
+  $('#rsvp-no').checked = attending === 'no';
+  $('#rsvp-adults').value = r && r.attending === 'si' ? r.adults : 2;
+  $('#rsvp-kids').value = r && r.attending === 'si' ? r.kids : 0;
+  $('#rsvp-message').value = (r && r.message) || '';
+  syncAttending();
+}
+
+function syncAttending() {
+  $('#rsvp-counts').hidden = $('#rsvp-no').checked;
+}
+
+function setupRsvp() {
+  const form = $('#rsvp-form');
+  form.addEventListener('change', (e) => { if (e.target.name === 'attending') syncAttending(); });
+  document.querySelectorAll('.stepper').forEach((st) => {
+    const input = st.querySelector('input');
+    st.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
+      const v = Math.max(0, Math.min(30, (parseInt(input.value, 10) || 0) + Number(b.dataset.step)));
+      input.value = v;
+    }));
+  });
+  $('#rsvp-cancel-edit').addEventListener('click', () => { editingRsvp = false; renderRsvp(); });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const err = $('#rsvp-error');
+    err.textContent = '';
+    const name = cleanText($('#rsvp-name').value);
+    const email = $('#rsvp-email').value.trim();
+    const attending = $('#rsvp-no').checked ? 'no' : 'si';
+    const adults = parseInt($('#rsvp-adults').value, 10) || 0;
+    const kids = parseInt($('#rsvp-kids').value, 10) || 0;
+    if (name.length < 2) { err.textContent = 'Escribe tu nombre o el de tu familia.'; $('#rsvp-name').focus(); return; }
+    if (!validEmail(email)) { err.textContent = 'Escribe un correo válido. Ahí te enviaremos la confirmación.'; $('#rsvp-email').focus(); return; }
+    if (attending === 'si' && adults + kids < 1) { err.textContent = '¿Cuántas personas vienen? Indica al menos una.'; return; }
+
+    const btn = $('#rsvp-submit');
+    btn.disabled = true;
+    const label = btn.textContent;
+    btn.textContent = 'Enviando…';
+    try {
+      const res = await apiPost({ action: 'rsvp', name, email, attending, adults, kids, message: cleanText($('#rsvp-message').value), key: guest && guest.key });
+      applyState(res);
+      if (res.ok) {
+        if (res.key) {
+          rememberGuest({ key: res.key, name, email });
+          await loadMe();
+        }
+        editingRsvp = false;
+        renderAll();
+        if (res.needsLink) {
+          showToast(`¡Gracias, ${name}! Guardamos tu respuesta. Revisa tu correo: ahí está tu enlace para hacer cambios 💌`);
+        } else {
+          showToast(attending === 'si'
+            ? `¡Gracias, ${name}! Te esperamos 🦃 Te enviamos la confirmación a tu correo.`
+            : `Gracias por avisarnos, ${name}. ¡Te vamos a extrañar! 🧡`);
+        }
+        if (attending === 'si') celebrate($('#rsvp-me').hidden ? btn : $('#rsvp-me'));
+      } else if (res.error === 'needs_link') {
+        err.textContent = 'Ya tenemos una respuesta con este correo. Te acabamos de enviar un enlace para que puedas cambiarla. 💌';
+      } else {
+        err.textContent = 'No se pudo guardar. Revisa los datos e inténtalo de nuevo.';
+      }
+    } catch (error) {
+      console.error(error);
+      err.textContent = 'No hay conexión. Revisa tu internet e inténtalo de nuevo.';
+    }
+    btn.disabled = false;
+    btn.textContent = label;
+  });
+
+  // ¿Perdiste tu enlace?
+  $('#lost-link-btn').addEventListener('click', () => {
+    $('#lost-form').hidden = false;
+    $('#lost-email').focus();
+  });
+  $('#lost-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = $('#lost-email').value.trim();
+    if (!validEmail(email)) { $('#lost-msg').textContent = 'Escribe un correo válido.'; return; }
+    $('#lost-msg').textContent = 'Enviando…';
+    try {
+      await apiPost({ action: 'sendLink', email });
+      $('#lost-msg').textContent = 'Si ese correo está registrado, te llegará tu enlace en unos minutos. Revisa también la carpeta de spam.';
+    } catch {
+      $('#lost-msg').textContent = 'No hay conexión. Inténtalo de nuevo.';
+    }
+  });
+}
+
+/* Enlace privado del correo: ?clave=... */
+async function handleKeyFromUrl() {
+  const params = new URLSearchParams(location.search);
+  const key = params.get('clave');
+  if (!key) return false;
+  params.delete('clave');
+  const clean = location.pathname + (params.toString() ? '?' + params : '') + location.hash;
+  history.replaceState(null, '', clean);
+  guest = { key };
+  await loadMe();
+  if (me) {
+    showToast(`¡Hola, ${me.guest.name}! Desde aquí puedes cambiar tu respuesta y tus contribuciones.`);
+    setTimeout(() => $('#rsvp').scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth' }), 600);
+  } else {
+    showToast('Ese enlace ya no es válido. Pide uno nuevo con tu correo.', true);
+  }
+  return true;
+}
 
 /* ---------- Confirmación visual ---------- */
 let toastTimer;
@@ -585,7 +877,14 @@ function init() {
   setupCardGrids();
   $('#demo-notice').hidden = Boolean(CONFIG.API_URL);
 
-  refresh();
+  setupRsvp();
+  guest = storageGet(GUEST_KEY, null);
+  (async () => {
+    const fromLink = await handleKeyFromUrl();
+    if (!fromLink) await loadMe();
+    fillRsvpForm();
+    await refresh();
+  })();
   $('#refresh-btn').addEventListener('click', async () => {
     const b = $('#refresh-btn');
     b.disabled = true;
@@ -597,7 +896,7 @@ function init() {
 
   // Mantener la información al día mientras la página está abierta
   setInterval(() => {
-    if (document.visibilityState === 'visible' && !dialog.open) refresh({ quiet: true });
+    if (document.visibilityState === 'visible' && !dialog.open && !editingRsvp) refresh({ quiet: true });
   }, CONFIG.REFRESH_SECONDS * 1000);
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') refresh({ quiet: true });

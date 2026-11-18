@@ -8,13 +8,12 @@ index.html                    Contenido de la invitación
 style.css                     Colores, tipografía, animaciones y diseño para teléfonos
 script.js                     Interacciones y registro de contribuciones (⚙️ CONFIG arriba)
 assets/                       Ilustraciones (pavo en su carrito de elote, calabaza, hojas, bellota)
-google-apps-script/Code.gs    Opción A: guardar respuestas en Google Sheets  ← recomendada
-api/contributions.js          Opción B: guardar respuestas en MongoDB (vía Vercel)
+google-apps-script/Code.gs    Servicio con Google Sheets: contribuciones, RSVP y correos
 ```
 
 Sin configurar nada, la página funciona en **modo de prueba** (las selecciones solo se guardan
 en el dispositivo y aparece un aviso amarillo). Para que todos vean las mismas contribuciones,
-conecta **una** de las dos opciones y pega su URL en `script.js`:
+conecta Google Sheets y pega su URL en `script.js`:
 
 ```js
 const CONFIG = {
@@ -34,7 +33,7 @@ const CONFIG = {
 
 ---
 
-## 2. Opción A: Google Sheets (recomendada, la más sencilla)
+## 2. Google Sheets: contribuciones, RSVP y correos
 
 1. Abre [sheets.new](https://sheets.new) y nombra la hoja **Thanksgiving 2026**.
 2. Menú **Extensiones → Apps Script**.
@@ -51,6 +50,28 @@ const CONFIG = {
 
 **Prueba rápida:** abre la URL `/exec` en el navegador. Debes ver `{"ok":true,"entries":[]}`.
 
+### Actualizar el código del Apps Script
+
+Cada vez que cambie `Code.gs`:
+1. Pega el código nuevo en el editor de Apps Script y guarda (💾).
+2. Ejecuta **setup** otra vez (▶ Ejecutar). Si pide permisos nuevos, por ejemplo para enviar correos, acéptalos.
+3. **Implementar → Administrar implementaciones → ✏️ → Versión: Nueva versión → Implementar.** La URL no cambia.
+
+### Qué guarda la hoja
+
+| Pestaña | Contenido |
+|---|---|
+| **Contribuciones** | Quién lleva qué, con su correo. Borra una fila para quitar una contribución. |
+| **RSVP** | Una fila por familia: si asiste, adultos, niños y mensaje. |
+| **Invitados** *(oculta)* | El enlace privado de cada invitado. No la compartas. |
+
+### Correos
+
+- **Confirmación:** cada invitado recibe un correo al confirmar asistencia o elegir una contribución. Incluye un botón **"Ver o cambiar mi respuesta"** con su enlace privado, para hacer cambios desde cualquier teléfono.
+- **Aviso para ti:** recibes un correo cada vez que alguien confirma o cambia su RSVP. Para apagarlo, cambia `NOTIFY_HOST` a `false`.
+- **Recordatorio:** en el editor elige **sendReminders → ▶ Ejecutar** para enviarlo en ese momento, o **scheduleReminder → ▶ Ejecutar** una sola vez para que salga solo el miércoles 25 de noviembre a las 10:00 a.m. (hora de San Diego; se cambia en `REMINDER_AT`). Le llega a quien confirmó que asiste y a quien eligió una contribución sin decir que no va.
+- Los correos salen de tu Gmail, con el nombre "Familia Jones Jocobi". Gmail permite unos 100 destinatarios al día.
+
 ### Problemas comunes con Google Sheets
 
 | Síntoma | Solución |
@@ -63,45 +84,15 @@ const CONFIG = {
 
 ---
 
-## 3. Opción B: MongoDB Atlas + Vercel
-
-Una página de GitHub Pages no puede conectarse directamente a MongoDB (tendría que exponer la
-contraseña de la base de datos), así que la función `api/contributions.js` funciona como intermediaria.
-
-**MongoDB Atlas (gratis)**
-1. Crea una cuenta en [mongodb.com/atlas](https://www.mongodb.com/atlas) y un clúster **M0 (Free)**.
-2. **Database Access → Add New Database User**: usuario y contraseña (guárdalos).
-3. **Network Access → Add IP Address → Allow access from anywhere** (`0.0.0.0/0`).
-   Vercel no tiene una IP fija, así que este paso es necesario.
-4. **Connect → Drivers** → copia la cadena `mongodb+srv://usuario:<password>@...` y
-   reemplaza `<password>` por tu contraseña.
-
-**Vercel (gratis)**
-1. Entra a [vercel.com](https://vercel.com) con tu cuenta de GitHub → **Add New → Project** → importa `thanksgiving-2026`.
-2. En **Environment Variables** agrega:
-   - `MONGODB_URI` = la cadena de conexión del paso 4
-   - `ALLOWED_ORIGIN` = `https://TU-USUARIO.github.io` *(opcional, limita quién puede usar la API)*
-3. **Deploy**. Tu API quedará en `https://thanksgiving-2026.vercel.app/api/contributions`
-   (abre esa URL: debes ver `{"ok":true,"entries":[]}`).
-4. Pega esa URL en `CONFIG.API_URL`.
-   *Opcional:* Vercel también publica la página en `https://thanksgiving-2026.vercel.app`, así
-   que puedes compartir ese enlace en lugar del de GitHub Pages y usar `API_URL: '/api/contributions'`.
-
-Las respuestas se guardan en la base `thanksgiving2026`, colección `contributions`
-(puedes verlas en Atlas → **Browse Collections**).
-
----
-
-## 4. Personalizar
+## 3. Personalizar
 
 - **Horario y dirección:** en `index.html`, dentro de la lista `event-details` de la portada.
 - **Contribuciones y cantidades sugeridas:** lista `CONTRIBUTIONS` en `script.js`.
   `slots` indica cuántas familias se necesitan (vinos = 1, refrescos y pay = 2).
   Si agregas o cambias un `id` o `slots`, actualízalo también en `ITEMS` del servidor
-  (`Code.gs` o `api/contributions.js`).
+  (`Code.gs`).
 - **Frases del pavo:** lista `TURKEY_LINES` en `script.js`.
-- **Quitar una contribución registrada por error:** borra la fila en la hoja *Contribuciones*
-  (Opción A) o el documento en Atlas (Opción B).
+- **Quitar una contribución registrada por error:** borra la fila en la hoja *Contribuciones*.
 
 ## 5. Detalles de la experiencia
 
@@ -112,4 +103,5 @@ Las respuestas se guardan en la base `thanksgiving2026`, colección `contributio
 - Al confirmar una contribución hay confeti de hojas y un mensaje de agradecimiento.
 - La lista se actualiza sola cada minuto y al volver a la pestaña.
 - Si dos personas eligen el último lugar al mismo tiempo, solo una queda registrada y la otra ve un aviso amable.
+- Cada invitado puede cancelar o cambiar sus contribuciones y su RSVP desde el mismo teléfono, o desde cualquier otro con el enlace de su correo.
 - Respeta la opción "reducir movimiento" del teléfono y funciona en WhatsApp, iMessage, correo y cualquier navegador moderno.

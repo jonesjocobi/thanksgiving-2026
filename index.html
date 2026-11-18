@@ -67,7 +67,10 @@
 
       <p class="countdown" id="countdown" aria-live="polite"></p>
 
-      <a class="btn btn-primary btn-hero" href="#menu">🍁 Ver menú y participar</a>
+      <div class="hero-actions">
+        <a class="btn btn-primary btn-hero" href="#rsvp">💌 Confirmar asistencia</a>
+        <a class="btn btn-light" href="#menu">🍁 Ver menú y participar</a>
+      </div>
     </div>
 
     <a class="scroll-hint" href="#bienvenida" aria-label="Continuar hacia abajo">
@@ -91,6 +94,83 @@
           <p class="signature">Familia Jones Jocobi ❤️</p>
           <p class="ps">P.D. ¡Nuestro pavo del jardín ya está listo para recibirlos! 😎🦃</p>
         </article>
+      </div>
+    </section>
+
+    <!-- ===================== RSVP ===================== -->
+    <section class="section rsvp" id="rsvp">
+      <div class="container">
+        <header class="section-header reveal">
+          <h2><span class="wiggle-emoji" aria-hidden="true">💌</span> Confirma tu asistencia</h2>
+          <p>Nos ayuda mucho saber cuántos seremos. Te enviaremos un correo de confirmación con un enlace para cambiar tu respuesta cuando quieras.</p>
+          <p class="rsvp-count" id="rsvp-count" hidden></p>
+        </header>
+
+        <div class="rsvp-card reveal">
+          <div class="rsvp-me" id="rsvp-me" hidden></div>
+
+          <form class="rsvp-form" id="rsvp-form" novalidate>
+            <fieldset class="attend-toggle">
+              <legend>¿Nos acompañas?</legend>
+              <input type="radio" name="attending" id="rsvp-yes" value="si" checked>
+              <label for="rsvp-yes">🦃 ¡Sí, ahí estaré!</label>
+              <input type="radio" name="attending" id="rsvp-no" value="no">
+              <label for="rsvp-no">😢 No podré ir</label>
+            </fieldset>
+
+            <div class="form-grid">
+              <div class="field">
+                <label for="rsvp-name">Tu nombre o el de tu familia</label>
+                <input type="text" id="rsvp-name" maxlength="60" autocomplete="name" placeholder="Ej. Familia García" required>
+              </div>
+              <div class="field">
+                <label for="rsvp-email">Tu correo</label>
+                <input type="email" id="rsvp-email" maxlength="120" autocomplete="email" inputmode="email" placeholder="tucorreo@ejemplo.com" required>
+              </div>
+            </div>
+
+            <div class="form-grid" id="rsvp-counts">
+              <div class="field">
+                <label for="rsvp-adults">Adultos</label>
+                <div class="stepper">
+                  <button type="button" data-step="-1" aria-label="Un adulto menos">−</button>
+                  <input type="number" id="rsvp-adults" min="0" max="30" value="2" inputmode="numeric">
+                  <button type="button" data-step="1" aria-label="Un adulto más">+</button>
+                </div>
+              </div>
+              <div class="field">
+                <label for="rsvp-kids">Niños</label>
+                <div class="stepper">
+                  <button type="button" data-step="-1" aria-label="Un niño menos">−</button>
+                  <input type="number" id="rsvp-kids" min="0" max="30" value="0" inputmode="numeric">
+                  <button type="button" data-step="1" aria-label="Un niño más">+</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="rsvp-message">Mensaje para la familia <span class="optional">(opcional)</span></label>
+              <textarea id="rsvp-message" maxlength="300" rows="2" placeholder="Alergias, quién viene, o unas palabras bonitas 🧡"></textarea>
+            </div>
+
+            <p class="form-error" id="rsvp-error" role="alert"></p>
+            <div class="rsvp-actions">
+              <button type="button" class="btn btn-ghost" id="rsvp-cancel-edit" hidden>Cancelar</button>
+              <button type="submit" class="btn btn-primary" id="rsvp-submit">Enviar confirmación 💌</button>
+            </div>
+            <p class="privacy-note">🔒 Tu correo solo lo ve la Familia Jones Jocobi. No aparece en la invitación.</p>
+          </form>
+
+          <div class="lost-wrap" id="lost-wrap">
+            <button type="button" class="link-btn" id="lost-link-btn">¿Ya respondiste desde otro teléfono? Recibe tu enlace por correo</button>
+            <form class="lost-form" id="lost-form" hidden novalidate>
+              <label for="lost-email" class="sr-only">Tu correo</label>
+              <input type="email" id="lost-email" placeholder="tucorreo@ejemplo.com" autocomplete="email" inputmode="email">
+              <button type="submit" class="btn btn-ghost">Enviar enlace</button>
+              <p class="lost-msg" id="lost-msg" role="status"></p>
+            </form>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -220,6 +300,10 @@
       <label for="claim-name">Tu nombre o el de tu familia</label>
       <input type="text" id="claim-name" name="name" maxlength="60" required
              autocomplete="name" placeholder="Ej. Familia García">
+      <label for="claim-email" class="label-gap">Tu correo</label>
+      <input type="email" id="claim-email" name="email" maxlength="120" required
+             autocomplete="email" inputmode="email" placeholder="tucorreo@ejemplo.com">
+      <p class="field-hint">Te enviaremos la confirmación y un enlace para cambiarla. No se muestra en la invitación.</p>
       <p class="modal-error" id="dialog-error" role="alert"></p>
       <div class="modal-actions">
         <button type="button" class="btn btn-ghost" id="dialog-cancel">Cancelar</button>
