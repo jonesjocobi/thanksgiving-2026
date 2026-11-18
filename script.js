@@ -12,7 +12,7 @@
      • Vacío ('')    → modo de prueba: se guarda solo en este dispositivo.
    --------------------------------------------------------- */
 const CONFIG = {
-  API_URL: '',
+  API_URL: 'https://script.google.com/macros/s/AKfycbwx1vnsqke3yzUdxVImIHbYNN5aJVld06bdSodxs02cwa1S9MoqDLPFGi6qUbD0eCM-Og/exec',
   EVENT_DATE: '2026-11-26T00:00:00-08:00', // San Diego (hora del Pacífico)
   REFRESH_SECONDS: 60,
 };
