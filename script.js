@@ -194,6 +194,19 @@ function localServer(p) {
   return { ok: false, error: 'bad_action' };
 }
 
+/* Mensajes claros según el error del servidor */
+function serverErrorText(code) {
+  const messages = {
+    bad_email: 'Revisa tu correo: parece que tiene un error.',
+    missing_name: 'Escribe tu nombre o el de tu familia.',
+    missing_dish: 'Escribe qué te gustaría traer.',
+    bad_count: '¿Cuántas personas vienen? Indica al menos una.',
+    bad_action: 'La invitación se está actualizando. Inténtalo en unos minutos (código: versión del servicio).',
+    server: 'Hubo un problema al guardar. Inténtalo de nuevo en un momento (código: servidor).',
+  };
+  return messages[code] || `No se pudo guardar. Inténtalo de nuevo (código: ${code || 'desconocido'}).`;
+}
+
 /* ---------- Identidad del invitado ---------- */
 function rememberGuest(data) {
   guest = { ...(guest || {}), ...data };
@@ -481,7 +494,7 @@ $('#claim-form').addEventListener('submit', async (e) => {
       renderAll();
       showToast('¡Uy! Alguien acaba de elegir esta opción. Elige otra, por favor 🍂', true);
     } else {
-      $('#dialog-error').textContent = 'No se pudo guardar. Inténtalo de nuevo.';
+      $('#dialog-error').textContent = serverErrorText(result.error);
       setSubmitting(false);
     }
   } catch (err) {
@@ -607,7 +620,7 @@ function setupRsvp() {
       } else if (res.error === 'needs_link') {
         err.textContent = 'Ya tenemos una respuesta con este correo. Te acabamos de enviar un enlace para que puedas cambiarla. 💌';
       } else {
-        err.textContent = 'No se pudo guardar. Revisa los datos e inténtalo de nuevo.';
+        err.textContent = serverErrorText(res.error);
       }
     } catch (error) {
       console.error(error);
