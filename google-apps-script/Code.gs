@@ -30,7 +30,7 @@ const ITEMS = {
   'refrescos':    { name: 'Refrescos (Soda)',              slots: 2 },
   'vino-tinto':   { name: 'Vino tinto',                    slots: 3 },
   'vino-blanco':  { name: 'Vino blanco',                   slots: 3 },
-  'pay-calabaza': { name: 'Pay de calabaza (Pumpkin Pie)', slots: 2 },
+  'pay-calabaza': { name: 'Pay de calabaza o manzana', slots: 2 },
 };
 const CUSTOM_ID = 'otro'; // contribuciones libres (sin límite)
 

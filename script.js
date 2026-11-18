@@ -35,7 +35,7 @@ const CONTRIBUTIONS = [
   { id: 'refrescos',    category: 'Bebidas', icon: '🥤', name: 'Refrescos',      en: 'Soda',        suggestion: '3–4 botellas de 2 litros', slots: 2 },
   { id: 'vino-tinto',   category: 'Bebidas', icon: '🍷', name: 'Vino tinto',                         suggestion: '2–3 botellas en total (se puede compartir)', slots: 3 },
   { id: 'vino-blanco',  category: 'Bebidas', icon: '🥂', name: 'Vino blanco',                        suggestion: '2–3 botellas en total (se puede compartir)', slots: 3 },
-  { id: 'pay-calabaza', category: 'Postres', icon: '🥧', name: 'Pay de calabaza', en: 'Pumpkin Pie', suggestion: '1–2 pays',                 slots: 2 },
+  { id: 'pay-calabaza', category: 'Postres', icon: '🥧', name: 'Pay de calabaza o manzana', en: 'Pumpkin or Apple Pie', suggestion: '1–2 pays',                 slots: 2 },
 ];
 
 /* Opción libre: los invitados escriben lo que quieren traer (sin límite) */
