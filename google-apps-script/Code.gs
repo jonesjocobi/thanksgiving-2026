@@ -28,8 +28,8 @@ const REMINDER_AT = '2026-11-25T10:00:00-08:00';
 // Debe coincidir con CONTRIBUTIONS en script.js (id y slots)
 const ITEMS = {
   'refrescos':    { name: 'Refrescos (Soda)',              slots: 2 },
-  'vino-tinto':   { name: 'Vino tinto',                    slots: 1 },
-  'vino-blanco':  { name: 'Vino blanco',                   slots: 1 },
+  'vino-tinto':   { name: 'Vino tinto',                    slots: 3 },
+  'vino-blanco':  { name: 'Vino blanco',                   slots: 3 },
   'pay-calabaza': { name: 'Pay de calabaza (Pumpkin Pie)', slots: 2 },
 };
 const CUSTOM_ID = 'otro'; // contribuciones libres (sin límite)

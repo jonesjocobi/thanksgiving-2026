@@ -88,7 +88,7 @@ Cada vez que cambie `Code.gs`:
 
 - **Horario y dirección:** en `index.html`, dentro de la lista `event-details` de la portada.
 - **Contribuciones y cantidades sugeridas:** lista `CONTRIBUTIONS` en `script.js`.
-  `slots` indica cuántas familias se necesitan (vinos = 1, refrescos y pay = 2).
+  `slots` indica cuántas familias pueden compartir una opción (vinos = 3, refrescos y pay = 2).
   Si agregas o cambias un `id` o `slots`, actualízalo también en `ITEMS` del servidor
   (`Code.gs`).
 - **Frases del pavo:** lista `TURKEY_LINES` en `script.js`.
